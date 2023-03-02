@@ -83,8 +83,7 @@ def stations():
     session = Session(engine)
 
     # Query all stations and their counts from Measures table
-    results = session.query(Measures.station, func.count(Measures.station)).\
-                group_by(Measures.station).order_by(desc(func.count(Measures.station))).all()
+    results = session.query(Station.station, Station.name).all()
 
     session.close()
 
