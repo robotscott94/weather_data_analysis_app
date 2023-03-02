@@ -1,3 +1,4 @@
+# Import dependencies
 import numpy as np
 import pandas as pd
 import datetime as dt
@@ -35,7 +36,7 @@ app = Flask(__name__)
 
 @app.route("/")
 def welcome():
-    """List all available api routes."""
+    """Welcome to my weather app. Use the routes below to access data."""
     return (
         f"Available Routes:<br/>"
         f"/api/v1.0/precip<br/>"
@@ -47,7 +48,6 @@ def welcome():
 
 # Returns json with the date as the key and the value as the precipitation
 # Only returns the jsonified precipitation data for the last year in the database
-
 @app.route("/api/v1.0/precip")
 def precip():
     session = Session(engine)
@@ -58,11 +58,12 @@ def precip():
     # Calculate date from a year before most recent date
     year_ago = dt.datetime.strptime(re_date, '%Y-%m-%d') - dt.timedelta(days=366)
 
-
+    # Query last year of precipitation data
     results = session.query(Measures.date, Measures.prcp).filter(Measures.date >= year_ago)
 
     session.close()
 
+    # Add data to dictionary
     rain_year = []
     for dat, prec in results:
         rain_dict = {}
@@ -81,11 +82,13 @@ def precip():
 def stations():
     session = Session(engine)
 
+    # Query all stations and their counts from Measures table
     results = session.query(Measures.station, func.count(Measures.station)).\
                 group_by(Measures.station).order_by(desc(func.count(Measures.station))).all()
 
     session.close()
 
+    # Add data to a dictionary
     all_stations = []
     for sta, cou in results:
         sta_dict = {}
@@ -107,17 +110,19 @@ def tobs():
     # Calculate date from a year before most recent date
     year_ago = dt.datetime.strptime(re_date, '%Y-%m-%d') - dt.timedelta(days=366)
 
-    # Design a query to find the most active stations (i.e. what stations have the most rows?)
-    # Listthe stations and the counts in descending order.
+    # Design a query to find the most active stations
     unique_counts = session.query(Measures.station, func.count(Measures.station)).\
                      group_by(Measures.station).order_by(desc(func.count(Measures.station))).all()
 
+    # Select most active stations
     most_active = unique_counts[0][0]
 
+    # Query temperature data for most active station
     results = session.query(Measures.tobs, Measures.date).filter(Measures.station == most_active).filter(Measures.date >= year_ago).all()
     
     session.close()
 
+    # Add data to dictionary
     year_tobs = []
     for tob, dat in results:
         tob_dict = {}
@@ -137,9 +142,11 @@ def tobs():
 def start(start):
     session = Session(engine)
 
+    # Filter temperature data by user-specified date and calculate summary statistics
     results = session.query(func.min(Measures.tobs), func.max(Measures.tobs), func.avg(Measures.tobs))\
         .filter(Measures.date >= start).all()
 
+    # Add summary statistics to a dictionary
     sumstats = []
     for mi, ma, av in results:
         sumdict = {}
@@ -157,9 +164,11 @@ def start(start):
 def startend(start, end):
     session = Session(engine)
 
+    # Filter temperature data by user-specified date and calculate summary statistics
     results = session.query(func.min(Measures.tobs), func.max(Measures.tobs), func.avg(Measures.tobs))\
         .filter(Measures.date >= start).filter(Measures.date <= end).all()
 
+    # Add summary statistics to a dictionary
     sumstats = []
     for mi, ma, av in results:
         sumdict = {}
