@@ -83,15 +83,19 @@ def stations():
     session = Session(engine)
 
     # Query all stations and their counts from Measures table
-    results = session.query(Station.station, Station.name).all()
+    results = session.query(Station.station, Station.name, Station.latitude, Station.longitude, Station.elevation).all()
+    # include latitude longitude and elevation?
 
     session.close()
 
     # Add data to a dictionary
     all_stations = []
-    for sta, cou in results:
+    for sta, nam, lat, lon, ele in results:
         sta_dict = {}
-        sta_dict[sta] = cou
+        sta_dict[sta] = nam 
+        sta_dict['latitude'] = lat
+        sta_dict['longitude'] = lon
+        sta_dict['elevation'] = ele
         all_stations.append(sta_dict)
     
     return jsonify(all_stations)
